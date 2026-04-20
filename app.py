@@ -185,6 +185,13 @@ STAT_PRESETS = {
 
 PLAYER_COLORS = ["#3b82f6", "#f97316", "#22c55e", "#ec4899"]
 
+def hex_to_rgba(hex_color, alpha=0.08):
+    """Convert hex color to rgba format with optional alpha."""
+    hex_color = hex_color.lstrip('#')
+    r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
+
 # ── Header ───────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="dash-header">
@@ -255,6 +262,9 @@ with tab_compare:
         label_visibility="collapsed",
         placeholder="Search for a player...",
     )
+    
+    # Filter out any previously selected players that no longer match current filters
+    selected_players = [p for p in selected_players if p in player_names]
 
     # Stat selection
     col_preset, col_custom = st.columns([1, 2])
@@ -331,7 +341,7 @@ with tab_compare:
                 theta=stat_labels + [stat_labels[0]],
                 name=pname,
                 fill='toself',
-                fillcolor=color.replace(")", ",0.08)").replace("rgb", "rgba") if "rgb" in color else f"{color}14",
+                fillcolor=hex_to_rgba(color),
                 line=dict(color=color, width=2.5),
                 marker=dict(size=6, color=color),
                 hovertext=hover + [hover[0]],
