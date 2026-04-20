@@ -1,0 +1,9 @@
+Sub-group,Players,k,Silhouette ↑,Davies-Bouldin ↓,Calinski-Harabasz ↑
+Goalkeeper,282,2,0.198,1.933,61.8
+Center Back,851,3,0.141,2.017,118.7
+Full Back / Wing Back,918,4,0.108,2.16,110.1
+Defensive Mid,598,3,0.113,2.259,76.8
+Central Mid,391,4,0.106,2.076,48.1
+Attacking Mid,209,3,0.12,2.073,29.1
+Winger,499,4,0.105,2.164,58.4
+Striker,443,6,0.091,2.143,44.9
