@@ -262,6 +262,17 @@ with st.sidebar:
         filtered = filtered[filtered["cluster_full"] == cluster_choice]
 
     st.divider()
+    st.markdown("### FM Role")
+    fm_roles = sorted(filtered["fm_role"].dropna().unique().tolist())
+    fm_role_choice = st.selectbox(
+        "Filter by FM role",
+        options=["All"] + fm_roles,
+        label_visibility="collapsed",
+    )
+    if fm_role_choice != "All":
+        filtered = filtered[filtered["fm_role"] == fm_role_choice]
+
+    st.divider()
     st.markdown("### Competition")
     competitions = sorted(filtered["primary_competition"].dropna().unique().tolist())
     comp_choice = st.selectbox(
