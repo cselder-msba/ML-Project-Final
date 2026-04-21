@@ -162,24 +162,54 @@ for group in STAT_GROUPS.values():
 
 # Preset profiles for quick selection
 STAT_PRESETS = {
-    "Attacking Profile": [
-        "avg_xg_per_shot_adj", "shot_on_target_rate_adj", "shot_assist_rate_adj",
-        "goal_assist_rate_adj", "dribble_success_rate_adj", "final_third_rate_adj",
-        "through_ball_rate_adj", "shot_per_100_adj",
+    # Attacking
+    "Winger": [
+        "dribble_success_rate_adj", "dribble_per_100_adj", "cross_rate_adj",
+        "final_third_rate_adj", "shot_assist_rate_adj", "goal_assist_rate_adj",
+        "avg_carry_dist_adj", "progressive_pass_rate_adj",
     ],
-    "Passing Profile": [
+    "Striker": [
+        "avg_xg_per_shot_adj", "shot_on_target_rate_adj", "shot_per_100_adj",
+        "goal_assist_rate_adj", "duel_win_rate_adj", "final_third_rate_adj",
+        "dribble_success_rate_adj", "through_ball_rate_adj",
+    ],
+    # Midfield
+    "Deep-Lying Midfielder": [
+        "pass_completion_rate_adj", "avg_pass_length_adj", "switch_rate_adj",
+        "progressive_pass_rate_adj", "pressure_pass_rate_adj",
+        "duel_win_rate_adj", "duel_per_100_adj", "under_pressure_rate_adj",
+    ],
+    "All-Around Midfielder": [
+        "pass_completion_rate_adj", "progressive_pass_rate_adj", "shot_assist_rate_adj",
+        "dribble_success_rate_adj", "duel_win_rate_adj", "carry_per_100_adj",
+        "final_third_rate_adj", "under_pressure_rate_adj",
+    ],
+    "Attacking Midfielder": [
+        "through_ball_rate_adj", "shot_assist_rate_adj", "goal_assist_rate_adj",
+        "avg_xg_per_shot_adj", "dribble_success_rate_adj",
+        "progressive_pass_rate_adj", "final_third_rate_adj", "pass_per_100_adj",
+    ],
+    # Defense
+    "Fullback": [
+        "cross_rate_adj", "progressive_pass_rate_adj", "avg_carry_dist_adj",
+        "duel_win_rate_adj", "pass_completion_rate_adj",
+        "under_pressure_rate_adj", "final_third_rate_adj", "carry_per_100_adj",
+    ],
+    "Center Half": [
+        "duel_win_rate_adj", "duel_per_100_adj", "avg_pass_length_adj",
+        "pass_completion_rate_adj", "pressure_pass_rate_adj",
+        "under_pressure_rate_adj", "switch_rate_adj", "progressive_pass_rate_adj",
+    ],
+    # Technical
+    "Passing": [
         "pass_completion_rate_adj", "avg_pass_length_adj", "progressive_pass_rate_adj",
         "cross_rate_adj", "switch_rate_adj", "through_ball_rate_adj",
         "shot_assist_rate_adj", "pressure_pass_rate_adj",
     ],
-    "Defensive Profile": [
-        "duel_win_rate_adj", "duel_per_100_adj", "under_pressure_rate_adj",
-        "pressure_pass_rate_adj", "pass_completion_rate_adj", "avg_carry_dist_adj",
-    ],
-    "All-Around": [
-        "pass_completion_rate_adj", "progressive_pass_rate_adj", "avg_xg_per_shot_adj",
-        "shot_on_target_rate_adj", "dribble_success_rate_adj", "duel_win_rate_adj",
-        "final_third_rate_adj", "under_pressure_rate_adj",
+    "Shooting": [
+        "avg_xg_per_shot_adj", "shot_on_target_rate_adj", "shot_per_100_adj",
+        "goal_assist_rate_adj", "shot_assist_rate_adj",
+        "dribble_success_rate_adj", "final_third_rate_adj", "through_ball_rate_adj",
     ],
 }
 
@@ -274,7 +304,7 @@ with tab_compare:
     if preset != "Custom":
         default_stats = STAT_PRESETS[preset]
     else:
-        default_stats = list(STAT_PRESETS["All-Around"])
+        default_stats = list(STAT_PRESETS["All-Around Midfielder"])
 
     with col_custom:
         chosen_stats = st.multiselect(
@@ -567,7 +597,7 @@ with tab_finder:
         radar_preset = st.selectbox(
             "Stat profile for radar",
             options=list(STAT_PRESETS.keys()),
-            index=3,
+            index=list(STAT_PRESETS.keys()).index("All-Around Midfielder"),
             key="finder_preset",
         )
         radar_stats = STAT_PRESETS[radar_preset]
