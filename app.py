@@ -520,13 +520,13 @@ with tab_roster:
 
     display_cols = [
         "player_name", "primary_position", "broad_position", "primary_competition",
-        "cluster_full", "fm_role", "sub_group", "role_fit_score", "role_fit_rank",
+        "cluster_full", "sub_group", "role_fit_score", "role_fit_rank",
         "role_confidence", "total_events",
     ]
     display_df = filtered[display_cols].copy()
     display_df.columns = [
         "Player", "Position", "Pos. Group", "Competition",
-        "Cluster", "FM Role", "Sub Group", "Fit Score", "Fit Rank",
+        "Cluster", "Sub Group", "Fit Score", "Fit Rank",
         "Confidence", "Events",
     ]
 
