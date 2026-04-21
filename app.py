@@ -246,7 +246,7 @@ with st.sidebar:
     st.caption(f"**{len(filtered):,}** players in current filter")
 
 # ── Tabs ─────────────────────────────────────────────────────────────────────
-tab_compare, tab_explore, tab_roster = st.tabs(["Compare Players", "Stats Explorer", "Player Table"])
+tab_compare, tab_finder, tab_explore, tab_roster = st.tabs(["Compare Players", "Similar Players", "Stats Explorer", "Player Table"])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 1: COMPARE PLAYERS
@@ -501,3 +501,150 @@ with tab_roster:
     )
 
     st.caption(f"Showing {len(display_df):,} players")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 2: SIMILAR PLAYERS
+# ══════════════════════════════════════════════════════════════════════════════
+ADJ_STATS = [c for c in df.columns if c.endswith("_adj")]
+
+with tab_finder:
+    st.markdown("#### Find Similar Players")
+
+    finder_col1, finder_col2 = st.columns([2, 1])
+    with finder_col1:
+        all_player_names = sorted(df["player_name"].dropna().unique().tolist())
+        target_player = st.selectbox(
+            "Select a player",
+            options=[""] + all_player_names,
+            label_visibility="collapsed",
+            placeholder="Search for a player...",
+        )
+    with finder_col2:
+        same_position = st.checkbox("Same position group only", value=True)
+
+    if target_player:
+        target_row = df[df["player_name"] == target_player].iloc[0]
+        target_vec = target_row[ADJ_STATS].values.astype(float)
+
+        pool = df[df["player_name"] != target_player].copy()
+        if same_position:
+            pool = pool[pool["broad_position"] == target_row["broad_position"]]
+
+        pool_vecs = pool[ADJ_STATS].values.astype(float)
+        distances = np.sqrt(((pool_vecs - target_vec) ** 2).sum(axis=1))
+        pool = pool.copy()
+        pool["_dist"] = distances
+        top3 = pool.nsmallest(3, "_dist")
+
+        # ── Player cards ──────────────────────────────────────────────────
+        all_cards = [target_row] + [top3.iloc[i] for i in range(len(top3))]
+        card_colors = [PLAYER_COLORS[0]] + PLAYER_COLORS[1:4]
+        card_labels = ["Selected"] + [f"#{i+1} Similar" for i in range(len(top3))]
+
+        cols = st.columns(len(all_cards))
+        for i, (prow, color, badge) in enumerate(zip(all_cards, card_colors, card_labels)):
+            with cols[i]:
+                dist_str = "" if i == 0 else f'<div style="font-size:11px; color:#64748b; margin-top:4px;">Distance: {top3.iloc[i-1]["_dist"]:.4f}</div>'
+                st.markdown(f"""
+                <div class="stat-card" style="border-top: 3px solid {color};">
+                    <div style="font-size:10px; text-transform:uppercase; letter-spacing:1px; color:{color}; margin-bottom:4px;">{badge}</div>
+                    <div class="value" style="font-size:15px; color:{color};">{prow['player_name']}</div>
+                    <div class="label" style="margin-top:6px;">{prow.get('primary_position', '—')}</div>
+                    <div style="font-size:12px; color:#94a3b8; margin-top:4px;">
+                        {prow.get('primary_competition', '—')} · {prow.get('cluster_full', '—')}
+                    </div>
+                    <div style="font-size:12px; color:#94a3b8; margin-top:2px;">
+                        FM Role: {prow.get('fm_role', '—')}
+                    </div>
+                    {dist_str}
+                </div>
+                """, unsafe_allow_html=True)
+
+        st.markdown("")
+
+        # ── Radar chart ───────────────────────────────────────────────────
+        radar_preset = st.selectbox(
+            "Stat profile for radar",
+            options=list(STAT_PRESETS.keys()),
+            index=3,
+            key="finder_preset",
+        )
+        radar_stats = STAT_PRESETS[radar_preset]
+        radar_labels = [ALL_STATS[s] for s in radar_stats]
+
+        radar_fig = go.Figure()
+        for i, (prow, color) in enumerate(zip(all_cards, card_colors)):
+            raw_values = [prow[s] for s in radar_stats]
+            pct_values = []
+            for s, raw in zip(radar_stats, raw_values):
+                col_data = df[s].dropna()
+                pct = (col_data < raw).sum() / len(col_data) * 100 if len(col_data) > 0 else 50
+                pct_values.append(round(pct, 1))
+
+            hover = [
+                f"{lab}<br>Raw: {raw:.3f}<br>Percentile: {pct:.0f}th"
+                for lab, raw, pct in zip(radar_labels, raw_values, pct_values)
+            ]
+
+            radar_fig.add_trace(go.Scatterpolar(
+                r=pct_values + [pct_values[0]],
+                theta=radar_labels + [radar_labels[0]],
+                name=prow["player_name"],
+                fill='toself',
+                fillcolor=hex_to_rgba(color),
+                line=dict(color=color, width=2.5),
+                marker=dict(size=6, color=color),
+                hovertext=hover + [hover[0]],
+                hoverinfo="text",
+            ))
+
+        radar_fig.update_layout(
+            polar=dict(
+                bgcolor="rgba(0,0,0,0)",
+                radialaxis=dict(
+                    visible=True,
+                    range=[0, 100],
+                    tickvals=[20, 40, 60, 80, 100],
+                    ticktext=["20th", "40th", "60th", "80th", "100th"],
+                    gridcolor="#334155",
+                    tickfont=dict(size=10, color="#64748b"),
+                    linecolor="#334155",
+                ),
+                angularaxis=dict(
+                    gridcolor="#334155",
+                    tickfont=dict(size=11, color="#94a3b8", family="DM Sans"),
+                    linecolor="#334155",
+                ),
+            ),
+            showlegend=True,
+            legend=dict(
+                font=dict(size=13, color="#e2e8f0", family="DM Sans"),
+                bgcolor="rgba(0,0,0,0)",
+                bordercolor="#334155",
+                borderwidth=1,
+                yanchor="top",
+                y=1.15,
+                xanchor="center",
+                x=0.5,
+                orientation="h",
+            ),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            margin=dict(l=80, r=80, t=60, b=60),
+            height=520,
+        )
+        st.plotly_chart(radar_fig, use_container_width=True, config={"displayModeBar": False})
+
+        # ── Stat comparison table ─────────────────────────────────────────
+        st.markdown("#### Head-to-Head Stats")
+        comp_rows = []
+        for s in radar_stats:
+            row = {"Stat": ALL_STATS[s]}
+            for prow in all_cards:
+                row[prow["player_name"]] = round(prow[s], 4)
+            comp_rows.append(row)
+        st.dataframe(pd.DataFrame(comp_rows), use_container_width=True, hide_index=True)
+
+    else:
+        st.info("Select a player above to find their three most similar peers.")
