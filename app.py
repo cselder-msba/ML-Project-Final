@@ -1,7 +1,9 @@
+import os
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+from sqlalchemy import create_engine
 
 # ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -113,8 +115,12 @@ section[data-testid="stSidebar"] .stMarkdown h3 {
 # ── Load data ────────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
-    df = pd.read_csv("player_profiles.csv")
-    return df
+    host = os.environ["DB_HOST"]
+    user = os.environ["DB_USER"]
+    password = os.environ["DB_PASSWORD"]
+    name = os.environ["DB_NAME"]
+    engine = create_engine(f"mysql+pymysql://{user}:{password}@{host}:3306/{name}")
+    return pd.read_sql("SELECT * FROM player_profiles", engine)
 
 df = load_data()
 
